@@ -2,30 +2,267 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calculadora de Reducciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Calculadora de Productividad y Conversión de Unidades</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            font-family: Arial, sans-serif;
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             height: 100vh;
+            background-color: #e3e6f0;
             margin: 0;
-            background-color: #f4f4f4;
         }
         .container {
-            text-align: center;
+            width: 90vw;
+            height: 90vh;
+            background-color: #ffffff;
+            border-radius: 2vw;
+            padding: 2vw;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin: 1vw;
+            position: relative;
+            transition: box-shadow 0.3s ease;
         }
-        h1 {
-            color: #333;
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 2vw;
+            background: linear-gradient(45deg, transparent, #007bff, transparent);
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .container.active {
+            box-shadow: 0 0 25px rgba(0, 123, 255, 0.6);
+        }
+        .container.active::before {
+            opacity: 1;
+            animation: shine 2s infinite;
+        }
+        @keyframes shine {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        .title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .result {
+            margin-top: 2vh;
+            font-weight: bold;
+            font-size: 2em;
+            color: red;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            margin-top: 10px;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #004085;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            margin-top: 10px;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            border-color: #545b62;
+        }
+        .form-group label {
+            font-weight: bold;
+        }
+        .translation-buttons {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .translation-buttons button {
+            margin: 0 5px;
+        }
+        .half {
+            width: 100%;
+            max-width: 430px;
+        }
+        @media (min-width: 768px) {
+            .half {
+                width: 48%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Bienvenido a la Calculadora de Reducciones</h1>
-        <p>Esta es una calculadora para determinar los porcentajes de reducción en trefilación.</p>
+    <div class="container half" id="productivity-container">
+        <div class="screen">
+            <h1 class="text-center" id="title">Calculadora de Productividad</h1>
+            <div class="form-group">
+                <label for="diameter" id="label-diameter">Diámetro del alambre (pulgadas):</label>
+                <input type="number" id="diameter" class="form-control" step="0.01" required onfocus="activateContainer('productivity-container')" onblur="deactivateContainer('productivity-container')">
+            </div>
+            <div class="form-group">
+                <label for="speed" id="label-speed">Velocidad de la máquina (fpm):</label>
+                <input type="number" id="speed" class="form-control" step="0.01" required onfocus="activateContainer('productivity-container')" onblur="deactivateContainer('productivity-container')">
+            </div>
+            <button onclick="calculateWeight()" class="btn btn-primary btn-block" id="calculate-button">Calcular</button>
+            <button onclick="clearInputs()" class="btn btn-secondary btn-block" id="clear-button">Limpiar</button>
+            <div class="translation-buttons">
+                <button onclick="setLanguage('es')" class="btn btn-secondary">Español</button>
+                <button onclick="setLanguage('en')" class="btn btn-secondary">English</button>
+            </div>
+            <div class="result text-center" id="result"></div>
+        </div>
     </div>
+
+    <div class="container half" id="conversion-container">
+        <div class="screen">
+            <h1 class="text-center" id="conversion-title">Conversión de Unidades</h1>
+            <div class="form-group">
+                <label for="mm-to-in" id="label-mm-to-in">Milímetros (mm)</label>
+                <input type="number" id="mm-to-in" class="form-control" step="0.01" oninput="convertMmToIn()" onfocus="activateContainer('conversion-container')" onblur="deactivateContainer('conversion-container')">
+                <label for="in-to-mm" id="label-in-to-mm">Pulgadas (in)</label>
+                <input type="number" id="in-to-mm" class="form-control" step="0.001" oninput="convertInToMm()" onfocus="activateContainer('conversion-container')" onblur="deactivateContainer('conversion-container')">
+            </div>
+            <div class="form-group">
+                <label for="mps-to-fpm" id="label-mps-to-fpm">Metros/seg. (m/s)</label>
+                <input type="number" id="mps-to-fpm" class="form-control" step="0.01" oninput="convertMpsToFpm()" onfocus="activateContainer('conversion-container')" onblur="deactivateContainer('conversion-container')">
+                <label for="fpm-to-mps" id="label-fpm-to-mps">Pies por Minuto (fpm)</label>
+                <input type="number" id="fpm-to-mps" class="form-control" step="1" oninput="convertFpmToMps()" onfocus="activateContainer('conversion-container')" onblur="deactivateContainer('conversion-container')">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function activateContainer(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function deactivateContainer(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        function calculateWeight() {
+            // Obtener valores de los campos de entrada
+            const diameter = parseFloat(document.getElementById('diameter').value);
+            const speed = parseFloat(document.getElementById('speed').value);
+            
+            if (isNaN(diameter) || isNaN(speed)) {
+                document.getElementById('result').innerText = document.documentElement.lang === 'es' ? 'Por favor, ingrese valores válidos.' : 'Please enter valid values.';
+                return;
+            }
+
+            // Constantes
+            const density = 0.283; // Densidad del acero en libras por pulgada cúbica
+            const poundsPerTon = 2204.62; // 1 tonelada = 2204.62 libras
+            
+            // Cálculos
+            const radius = diameter / 2; // Radio en pulgadas
+            const crossSectionalArea = Math.PI * Math.pow(radius, 2); // Área de la sección transversal en pulgadas cuadradas
+            const volumePerFoot = crossSectionalArea * 12; // Volumen por pie en pulgadas cúbicas
+            const weightPerFoot = volumePerFoot * density; // Peso por pie en libras
+            const weightPerMinute = weightPerFoot * speed; // Peso por minuto en libras
+            const weightPerHour = weightPerMinute * 60; // Peso por hora en libras
+            const weightPerHourTons = weightPerHour / poundsPerTon; // Peso por hora en toneladas
+            
+            // Mostrar el resultado
+            document.getElementById('result').innerHTML = `<span>${weightPerHourTons.toFixed(2)}</span> Ton/hora`;
+        }
+
+        function clearInputs() {
+            document.getElementById('diameter').value = '';
+            document.getElementById('speed').value = '';
+            document.getElementById('result').innerText = '';
+            document.getElementById('mm-to-in').value = '';
+            document.getElementById('in-to-mm').value = '';
+            document.getElementById('mps-to-fpm').value = '';
+            document.getElementById('fpm-to-mps').value = '';
+        }
+
+        function setLanguage(lang) {
+            document.documentElement.lang = lang;
+            const data = {
+                diameter: document.getElementById('diameter').value,
+                speed: document.getElementById('speed').value,
+                mmToIn: document.getElementById('mm-to-in').value,
+                inToMm: document.getElementById('in-to-mm').value,
+                mpsToFpm: document.getElementById('mps-to-fpm').value,
+                fpmToMps: document.getElementById('fpm-to-mps').value,
+            };
+            if (lang === 'es') {
+                document.getElementById('title').innerText = 'Calculadora de Productividad';
+                document.getElementById('label-diameter').innerText = 'Diámetro del alambre (pulgadas):';
+                document.getElementById('label-speed').innerText = 'Velocidad de la máquina (fpm):';
+                document.getElementById('calculate-button').innerText = 'Calcular';
+                document.getElementById('clear-button').innerText = 'Limpiar';
+                document.getElementById('conversion-title').innerText = 'Conversión de Unidades';
+                document.getElementById('label-mm-to-in').innerText = 'Milímetros (mm)';
+                document.getElementById('label-in-to-mm').innerText = 'Pulgadas (in)';
+                document.getElementById('label-mps-to-fpm').innerText = 'Metros/Seg. (m/s)';
+                document.getElementById('label-fpm-to-mps').innerText = 'Pies por min. (fpm)';
+            } else if (lang === 'en') {
+                document.getElementById('title').innerText = 'Productivity Calculator';
+                document.getElementById('label-diameter').innerText = 'Wire diameter (inches):';
+                document.getElementById('label-speed').innerText = 'Machine speed (fpm):';
+                document.getElementById('calculate-button').innerText = 'Calculate';
+                document.getElementById('clear-button').innerText = 'Clear';
+                document.getElementById('conversion-title').innerText = 'Unit Conversion';
+                document.getElementById('label-mm-to-in').innerText = 'Millimeters (mm)';
+                document.getElementById('label-in-to-mm').innerText = 'Inches (in)';
+                document.getElementById('label-mps-to-fpm').innerText = 'Meters per second (m/s)';
+                document.getElementById('label-fpm-to-mps').innerText = 'Feet per minute (fpm)';
+            }
+            document.getElementById('diameter').value = data.diameter;
+            document.getElementById('speed').value = data.speed;
+            document.getElementById('mm-to-in').value = data.mmToIn;
+            document.getElementById('in-to-mm').value = data.inToMm;
+            document.getElementById('mps-to-fpm').value = data.mpsToFpm;
+            document.getElementById('fpm-to-mps').value = data.fpmToMps;
+        }
+
+        function convertMmToIn() {
+            const mm = parseFloat(document.getElementById('mm-to-in').value);
+            if (!isNaN(mm)) {
+                const inches = mm / 25.4;
+                document.getElementById('in-to-mm').value = inches.toFixed(3);
+            }
+        }
+
+        function convertInToMm() {
+            const inches = parseFloat(document.getElementById('in-to-mm').value);
+            if (!isNaN(inches)) {
+                const mm = inches * 25.4;
+                document.getElementById('mm-to-in').value = mm.toFixed(2);
+            }
+        }
+
+        function convertMpsToFpm() {
+            const mps = parseFloat(document.getElementById('mps-to-fpm').value);
+            if (!isNaN(mps)) {
+                const fpm = (mps * 196.85).toFixed(2);
+                document.getElementById('fpm-to-mps').value = fpm;
+            }
+        }
+
+        function convertFpmToMps() {
+            const fpm = parseFloat(document.getElementById('fpm-to-mps').value);
+            if (!isNaN(fpm)) {
+                const mps = (fpm / 196.85).toFixed(2);
+                document.getElementById('mps-to-fpm').value = mps;
+            }
+        }
+    </script>
 </body>
 </html>
